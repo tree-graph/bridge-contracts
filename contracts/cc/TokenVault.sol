@@ -168,7 +168,9 @@ contract TokenVault is IERC721Receiver, IERC1155Receiver, RouteReader {
         uint256[] calldata values,
         bytes calldata data
     ) public virtual override returns (bytes4) {
-        crossRequest(msg.sender, from, ids, values, data);
+        if (enableReceiverHook) {
+            crossRequest(msg.sender, from, ids, values, data);
+        }
         return this.onERC1155BatchReceived.selector;
     }
 
