@@ -25,6 +25,7 @@ contract PeggedERC1155 is ERC1155, TokenNameSymbol, ERC1155URIStorage, ERC1155Bu
     }
 
     function mint(address to, uint[] memory tokenIds, uint[] memory amounts ) public onlyOwner {
+        require(tokenIds.length == amounts.length, "invalid length");
         for(uint i=0; i<tokenIds.length;i++) {
             _mint(to, tokenIds[i], amounts[i], "");
         }
