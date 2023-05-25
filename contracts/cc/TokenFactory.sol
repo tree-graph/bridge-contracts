@@ -4,10 +4,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "./PeggedERC721.sol";
+import "./PeggedERC20.sol";
 
 contract TokenFactory is Ownable {
     address beacon721;
+    address beacon20;
     event ERC721_CREATED(address indexed artifact, address indexed creator);
+    event ERC20_CREATED(address indexed artifact, address indexed creator);
 
     constructor(address beacon721_) {
         beacon721 = beacon721_;
@@ -17,11 +20,21 @@ contract TokenFactory is Ownable {
         beacon721 = beacon721_;
         _transferOwnership(msg.sender);
     }
+    function setBeacon20(address beacon20_) public onlyOwner {
+        beacon20 = beacon20_;
+    }
     function deployERC721(string memory name_, string memory symbol_, string memory uri_) public returns(PeggedERC721) {
         PeggedERC721 erc721 = PeggedERC721(address(new BeaconProxy(beacon721, "")));
         erc721.initialize(name_, symbol_, uri_);
         erc721.transferOwnership(msg.sender);
         emit ERC721_CREATED(address(erc721), msg.sender);
         return erc721;
+    }
+    function deployERC20(string memory name_, string memory symbol_) public returns(PeggedERC20) {
+        PeggedERC20 newToken = PeggedERC20(address(new BeaconProxy(beacon20, "")));
+        newToken.initialize(name_, symbol_);
+        newToken.transferOwnership(msg.sender);
+        emit ERC20_CREATED(address(newToken), msg.sender);
+        return newToken;
     }
 }

@@ -1,7 +1,10 @@
-import {attachT, deployBeacon, deployWithBeaconProxy, waitTx} from "../lib";
+import {attachT, deploy, deployBeacon, deployWithBeaconProxy, waitTx} from "../lib";
 import fs from "fs";
 import {readInfo} from "../biz";
 import {TokenFactory, TokenVault} from "../../typechain-types/contracts/cc";
+import {ethers} from "ethers";
+import {UpgradeableBeacon} from "../../typechain-types/@openzeppelin/contracts/proxy/beacon";
+import {PeggedERC20__factory} from "../../typechain-types/factories/contracts/cc";
 export async function deployTokenFactory() {
     let {impl:impl721, beacon:beacon721} = await deployBeacon("PeggedERC721", []);
     let {impl:implTokeFactory, beacon:beaconTokeFactory, proxy:tokenFactoryProxy} = await deployWithBeaconProxy(
@@ -29,6 +32,18 @@ export async function deployBridge(tag:string) {
     tag && fs.writeFileSync(`${tag}`, info);
     return obj;
 }
+export async function createPeg20(tag, name, symbol) {
+    const {tokenFactoryProxy} = readInfo(tag);
+    const tkf = await attachT<TokenFactory>("TokenFactory", tokenFactoryProxy);
+    const rcpt = await tkf.deployERC20(name, symbol).then(waitTx);
+    const {logs} = rcpt;
+    // console.log(`logs`, logs)
+    const logArr = logs.filter(log=>log.address==tokenFactoryProxy).map(log=>tkf.interface.parseLog(log));
+    // console.log(`parsed log`, logArr)
+    const creationLog = logArr.find(l=>tkf.interface.events["ERC20_CREATED(address,address)"].name == l.name)
+    console.log(`create ${creationLog.args.artifact} , tx ${rcpt.transactionHash}`)
+    return creationLog.args.artifact;
+}
 export async function createPeg721(tag, name, symbol, baseUri) {
     const {tokenFactoryProxy} = readInfo(tag);
     const tkf = await attachT<TokenFactory>("TokenFactory", tokenFactoryProxy);
@@ -54,4 +69,19 @@ export async function registerDeparture(tag, localContract, dstChain, dstContrac
     const {vaultProxy} = readInfo(tag);
     const vault = await attachT<TokenVault>("TokenVault", vaultProxy);
     await vault.registerDeparture(localContract, dstChain, op, uriMode, dstContract).then(waitTx)
+}
+
+export async function set20beacon(tag) {
+    const {tokenFactoryProxy} = readInfo(tag);
+    const {impl, beacon} = await deployBeacon("PeggedERC20",[])
+    const factory = await attachT<TokenFactory>("TokenFactory", tokenFactoryProxy);
+    await factory.setBeacon20(beacon.address).then(waitTx)
+    console.log(`setBeacon20 on ${tokenFactoryProxy} to ${beacon.address}`)
+}
+export async function upgradeTokenFactory(tag) {
+    const {beaconTokeFactory} = readInfo(tag);
+    const impl = await deploy("TokenFactory", [`0x${'0'.padStart(40, '0')}`])
+    const upgrade = await attachT<UpgradeableBeacon>("UpgradeableBeacon", beaconTokeFactory);
+    await upgrade.upgradeTo(impl.address).then(waitTx)
+    console.log(`upgrade token factory to ${impl.address}`)
 }

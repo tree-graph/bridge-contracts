@@ -1,5 +1,14 @@
 import {attachT, networkInfo, waitTx} from "../lib";
-import {createPeg721, deployBridge, OP, registerArrival, registerDeparture, URI_MODE} from "./lib-bridge";
+import {
+    createPeg20,
+    createPeg721,
+    deployBridge,
+    OP,
+    registerArrival,
+    registerDeparture, set20beacon,
+    upgradeTokenFactory,
+    URI_MODE
+} from "./lib-bridge";
 import {PeggedERC721, TokenVault} from "../../typechain-types/contracts/cc";
 import {ethers} from "ethers";
 
@@ -10,6 +19,11 @@ async function main() {
     console.log(`cmd `, CMD)
     if (CMD === 'deploy') {
         await deployBridge(tag);
+    } else if (CMD === 'upTokenFactory') {
+        await upgradeTokenFactory(tag)
+    } else if (CMD === 'set20beacon') {
+        await set20beacon(tag)
+        await createPeg20(tag, "Test T20", "t20");
     } else if (CMD === 'test') {
         const {vaultProxy} = await deployBridge(tag);
         const erc721_0 = await createPeg721(tag, "721-0", "p721-0", "https://baidu.com/")
