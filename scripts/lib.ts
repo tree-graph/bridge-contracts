@@ -41,8 +41,8 @@ export async function deployBeacon(implName:string, argv: any[]) {
     const beacon = await deploy("UpgradeableBeacon", [impl!.address]) as UpgradeableBeacon;
     return {impl, beacon}
 }
-export async function deployWithBeaconProxy(implName:string, initArgv: any[], forceInit = false) {
-    const {impl, beacon} = await deployBeacon(implName, initArgv || []);
+export async function deployWithBeaconProxy(implName:string, initArgv: any[], forceInit = false, hasImplArgs=true) {
+    const {impl, beacon} = await deployBeacon(implName, hasImplArgs ? initArgv : []);
 
     const initReq = initArgv.length||forceInit ? await impl!.populateTransaction['initialize'](...initArgv) : {data: Buffer.from("")};
     const proxy = await deploy("BeaconProxy", [beacon?.address, initReq!.data])

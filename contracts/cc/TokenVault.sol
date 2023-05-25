@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "./Router.sol";
 import "./IMintable.sol";
 import "./PeggedERC721.sol";
+import "./PeggedERC1155.sol";
 import "./RouteReader.sol";
 
 contract TokenVault is IERC721Receiver, IERC1155Receiver, RouteReader {
@@ -68,8 +69,14 @@ contract TokenVault is IERC721Receiver, IERC1155Receiver, RouteReader {
         if (peer.op == OP.MINT) {
             IMintable(localContract).mint(issuer, tokenIds, amounts);
             if (peer.uriMode == URI_MODE.STORAGE) {
-                for(uint i=0; i<tokenIds.length; i++) {
-                    PeggedERC721(localContract).setTokenURI(tokenIds[i], uris[i]);
+                if (peer.eip == EIP.EIP721) {
+                    for(uint i=0; i<tokenIds.length; i++) {
+                        PeggedERC721(localContract).setTokenURI(tokenIds[i], uris[i]);
+                    }
+                } else if (peer.eip == EIP.EIP1155) {
+                    for(uint i=0; i<tokenIds.length; i++) {
+                        PeggedERC1155(localContract).setURI(tokenIds[i], uris[i]);
+                    }
                 }
             }
         } else if (peer.eip == EIP.EIP1155) {
