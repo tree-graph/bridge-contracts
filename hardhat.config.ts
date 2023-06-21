@@ -2,7 +2,8 @@ import * as dotenv from "dotenv";
 dotenv.config()
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "hardhat-abi-exporter"
+import "hardhat-abi-exporter";
+import "@solidstate/hardhat-bytecode-exporter";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.18",
@@ -29,6 +30,9 @@ const config: HardhatUserConfig = {
       accounts:
           process.env.k1994 !== undefined ? [process.env.k1994] : [],
     }
+  },
+  bytecodeExporter: {
+    path: "./abi"
   }
 };
 

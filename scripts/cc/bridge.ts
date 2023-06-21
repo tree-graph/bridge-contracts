@@ -27,11 +27,11 @@ async function testNFT(tag: string, erc721_0, chainId, erc721_1, departureOp: OP
     await erc721_1_c.init(erc721_1);
     await erc721_1_c.contract.transferOwnership(vaultProxy).then(waitTx)
     await erc721_0_c.mint(account, tokenId, amount, "storage-uri-test.json").then(waitTx);
-    await cross721(account, vaultProxy, erc721_0_c, chainId, erc721_1, tokenId);
-    await cross721(account, vaultProxy, erc721_1_c, chainId, erc721_0, tokenId);
+    await cross721(account, vaultProxy, erc721_0_c, chainId, erc721_1, tokenId, true);
+    await cross721(account, vaultProxy, erc721_1_c, chainId, erc721_0, tokenId, true);
 }
 
-async function test721(tag: string, chainId, account: string) {
+async function test721(tag: string, chainId, account: string, claim=true) {
     const {vaultProxy} = await deployBridge(tag);
     const erc721_0 = await createPeg721(tag, "721-0", "p721-0", "https://baidu.com/")
     const erc721_1 = await createPeg721(tag, "721-01", "p721-01", "")
@@ -46,8 +46,10 @@ async function test721(tag: string, chainId, account: string) {
     const erc721_1_c = await attachT<PeggedERC721>("PeggedERC721", erc721_1);
     await erc721_1_c.transferOwnership(vaultProxy).then(waitTx)
     await erc721_0_c.safeMint(account, 1, "storage-uri-test721.json").then(waitTx);
-    await cross721(account, vaultProxy, erc721_0, chainId, erc721_1, 1);
-    await cross721(account, vaultProxy, erc721_1, chainId, erc721_0, 1);
+    await cross721(account, vaultProxy, erc721_0, chainId, erc721_1, 1, claim);
+    if (claim) {
+        await cross721(account, vaultProxy, erc721_1, chainId, erc721_0, 1, claim);
+    }
 }
 
 async function test1155(tag: string, chainId, account: string) {
@@ -84,11 +86,13 @@ async function main() {
     } else if (CMD === 'test1155') {
         await test1155(tag, chainId, account);
     } else if (CMD === 'test721') {
-        await test721(tag, chainId, account);
+        // chain id may be duplicate, so we use central db id.
+        const chainDbId = 1
+        await test721(tag, chainDbId, account, false);
     }
 }
 
-async function cross721(account, vaultProxy, erc721_0, dstChain, erc721_1, tokenId) {
+async function cross721(account, vaultProxy, erc721_0, dstChain, erc721_1, tokenId, claim) {
     const vault = await attachT<TokenVault>("TokenVault", vaultProxy);
 
     const data = ethers.utils.defaultAbiCoder.encode(["uint","address"],[dstChain, erc721_1]);
@@ -100,10 +104,12 @@ async function cross721(account, vaultProxy, erc721_0, dstChain, erc721_1, token
     // console.log(`departure log`, logArr)
     const crossEvent = logArr.find(log=>log.name=='CrossRequest')
     console.log(`cross event in tx ${crossReqRcpt.transactionHash}`, crossEvent.args)
-    const {args:{toChainId, asset, targetContract, tokenIds, amounts, uris, from, userNonce}} = crossEvent;
-    const rcpt = await vault.claimByAdmin(toChainId, asset, targetContract, tokenIds,
-        amounts, uris, from, userNonce).then(waitTx)
-
+    if (claim) {
+        const {args: {toChainId, asset, targetContract, tokenIds, amounts, uris, from, userNonce}} = crossEvent;
+        const rcpt = await vault.claimByAdmin(toChainId, asset, targetContract, tokenIds,
+            amounts, uris, from, userNonce).then(waitTx)
+        console.log(`claim by admin logs `, rcpt.logs)
+    }
 }
 
 async function cross1155(account, vaultProxy, erc1155_0, dstChain, erc1155_1, tokenId) {

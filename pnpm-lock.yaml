@@ -10,6 +10,7 @@ specifiers:
   '@nomiclabs/hardhat-etherscan': ^3.0.0
   '@openzeppelin/contracts': ^4.8.2
   '@openzeppelin/contracts-upgradeable': ^4.8.2
+  '@solidstate/hardhat-bytecode-exporter': ^1.1.1
   '@typechain/ethers-v5': ^10.1.0
   '@typechain/hardhat': ^6.1.2
   '@types/chai': ^4.2.0
@@ -41,6 +42,7 @@ devDependencies:
   '@nomicfoundation/hardhat-toolbox': 2.0.2_2jckrog7nfakkleiragf2vf6vm
   '@nomiclabs/hardhat-ethers': 2.2.2_wknqauzjtp3mhprkntsmqpccee
   '@nomiclabs/hardhat-etherscan': 3.1.7_hardhat@2.13.0
+  '@solidstate/hardhat-bytecode-exporter': 1.1.1_hardhat@2.13.0
   '@typechain/ethers-v5': 10.2.0_7z2fwjd5cuev3ejr4i36eosrry
   '@typechain/hardhat': 6.1.5_i2fwc4p7n2iltkzqmr3qbux6yq
   '@types/chai': 4.3.4
@@ -842,6 +844,16 @@ packages:
     resolution: {integrity: sha512-6dKnHZn7fg/iQATVEzqyUOyEidbn05q7YA2mQ9hC0MMXhhV3/JrsxmFSYZAcr7j1yUP700LLhTruvJ3MiQmjJg==}
     dependencies:
       antlr4ts: 0.5.0-alpha.4
+    dev: true
+
+  /@solidstate/hardhat-bytecode-exporter/1.1.1_hardhat@2.13.0:
+    resolution: {integrity: sha512-/gJevnOMXSoVLMeUifqgUFDQ1mFIcr4BYrmZ4KrpMGc2Ynv2Q5TZcgDvkkzEe4Ub15c/TkCqZBrMPaC0P5LHAQ==}
+    engines: {node: '>=14.14.0'}
+    peerDependencies:
+      hardhat: ^2.0.0
+    dependencies:
+      delete-empty: 3.0.0
+      hardhat: 2.13.0_6qtx7vkbdhwvdm4crzlegk4mvi
     dev: true
 
   /@tsconfig/node10/1.0.9:
@@ -1699,7 +1711,6 @@ packages:
       minimist: 1.2.8
       path-starts-with: 2.0.0
       rimraf: 2.7.1
-    dev: false
 
   /depd/2.0.0:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
@@ -3416,7 +3427,6 @@ packages:
   /path-starts-with/2.0.0:
     resolution: {integrity: sha512-3UHTHbJz5+NLkPafFR+2ycJOjoc4WV2e9qCZCnm71zHiWaFrm1XniLVTkZXvaRgxr1xFh9JsTdicpH2yM03nLA==}
     engines: {node: '>=8'}
-    dev: false
 
   /path-type/4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}

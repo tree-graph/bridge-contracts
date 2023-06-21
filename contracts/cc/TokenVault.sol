@@ -53,6 +53,9 @@ contract TokenVault is IERC721Receiver, IERC1155Receiver, RouteReader {
 //        ) = abi.decode(receipt, (uint,address,uint[],uint[],address, uint));
         revert("not supported yet");
     }
+    function getUserNextClaimNonce(address issuer, uint srcChainId) public view returns (uint) {
+        return userClaimNonce[issuer][srcChainId] + 1;
+    }
     function claimByAdmin(uint srcChainId, address srcContract, address localContract,
         uint[] memory tokenIds, uint[] memory amounts, string[] memory uris,
         address issuer, uint userNonce_) public onlyRole(Roles.CLAIM_ON_VAULT) {
