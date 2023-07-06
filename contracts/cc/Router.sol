@@ -68,14 +68,18 @@ contract Router is AccessControl {
     function registerDeparture(address local, uint targetChainId, OP op, URI_MODE uriMode,
         address remoteContract)
     public onlyRole(Roles.ADD_DEPARTURE) {
-        _addRoute(departureMap, local, targetChainId, op, uriMode, remoteContract);
+        _addRoute(departureMap, local, targetChainId,
+            detectLocalEIP(local),
+            op, uriMode, remoteContract);
         emit DepartureConfigured(local, targetChainId, remoteContract);
     }
 
     /**
      * Internal function to add a route
      */
-    function _addRoute(RouteTable storage routeTable, address indexContract, uint indexChainId, OP op, URI_MODE uriMode,
+    function _addRoute(RouteTable storage routeTable, address indexContract, uint indexChainId,
+        EIP eip,
+        OP op, URI_MODE uriMode,
         address valueContract) internal {
         ChainTable storage chainTable = routeTable.map[indexContract];
         if (chainTable.chains.length == 0) {
@@ -86,17 +90,21 @@ contract Router is AccessControl {
         if (cfg.peerKeys.length == 0) {
             chainTable.chains.push(indexChainId);
         }
-        PeerInfo memory info = PeerInfo(op, EIP.NOT_SET, block.timestamp, msg.sender, true, uriMode);
-        if (IERC165(indexContract).supportsInterface(ERC721InterfaceId)) {
-            info.eip = EIP.EIP721;
-        } else if (IERC165(indexContract).supportsInterface(ERC1155InterfaceId)) {
-            info.eip = EIP.EIP1155;
-        } else {
-            info.eip = EIP.EIP20;
-        }
+        PeerInfo memory info = PeerInfo(op, eip, block.timestamp, msg.sender, true, uriMode);
+
         require(cfg.peers[valueContract].timestamp == 0, "already registered");
         cfg.peers[valueContract] = info;
         cfg.peerKeys.push(valueContract);
+    }
+
+    function detectLocalEIP(address indexContract) public view returns (EIP) {
+        if (IERC165(indexContract).supportsInterface(ERC721InterfaceId)) {
+            return EIP.EIP721;
+        } else if (IERC165(indexContract).supportsInterface(ERC1155InterfaceId)) {
+            return EIP.EIP1155;
+        } else {
+            return EIP.EIP20;
+        }
     }
 
 
@@ -106,7 +114,9 @@ contract Router is AccessControl {
     function registerArrival(address remoteContract, uint remoteChainId, OP op, URI_MODE uriMode,
         address localContract)
     public onlyRole(Roles.ADD_ARRIVAL) {
-        _addRoute(arrivalMap, remoteContract, remoteChainId, op, uriMode, localContract);
+        _addRoute(arrivalMap, remoteContract, remoteChainId,
+            detectLocalEIP(localContract),
+            op, uriMode, localContract);
         emit ArrivalConfigured(remoteContract, remoteChainId, localContract);
     }
 }

@@ -12,6 +12,7 @@ import {
 } from "./lib-bridge";
 import {PeggedERC1155, PeggedERC721, TokenVault} from "../../typechain-types/contracts/cc";
 import {ethers} from "ethers";
+import {readInfo} from "../biz";
 
 async function testNFT(tag: string, erc721_0, chainId, erc721_1, departureOp: OP.BURN721, vaultProxy, account: string, tokenId: number, amount: number) {
     // 0->1
@@ -85,10 +86,28 @@ async function main() {
         await createPeg20(tag, "Test T20", "t20");
     } else if (CMD === 'test1155') {
         await test1155(tag, chainId, account);
+    } else if (CMD?.startsWith('cross')) {
+        const {vaultProxy} = readInfo(tag)
+        let erc721_0 = "0x94099942864EA81cCF197E9D71ac53310b1468D8";
+        let erc721_1 = "0x06B1D212B8da92b83AF328De5eef4E211Da02097";
+        let tokenId = Date.now();
+        const chainDbId = 1
+        if (CMD === 'crossBack') {
+            tokenId = 1
+            await cross721(account, vaultProxy, erc721_1, chainDbId, erc721_0, tokenId, false);
+        } else {
+            // mint
+            const erc721_0_c = await attachT<PeggedERC721>("PeggedERC721", erc721_0);
+            await erc721_0_c.safeMint(account, tokenId, "storage-uri-test721.json").then(waitTx);
+            //
+            await cross721(account, vaultProxy, erc721_0, chainDbId, erc721_1, tokenId, false);
+        }
     } else if (CMD === 'test721') {
         // chain id may be duplicate, so we use central db id.
         const chainDbId = 1
         await test721(tag, chainDbId, account, false);
+    } else {
+        console.log(`unknown cmd [${CMD}]`)
     }
 }
 
